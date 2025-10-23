@@ -140,7 +140,7 @@ class CommentCreateSerializer(serializers.Serializer):
         return Comment.objects.create(
             user=user,
             content=content,
-            reply_to=reply_to,
+            parent=reply_to,
             post=post,
         )
 

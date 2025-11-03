@@ -117,6 +117,13 @@ class Base(Configuration):
         "UPDATE_LAST_LOGIN": True,
     }
 
+    # Media files
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+
+    # Static files
+    STATIC_ROOT = BASE_DIR / "static"
+
 
 class Dev(Base):
     DEBUG = True
@@ -124,9 +131,19 @@ class Dev(Base):
     CORS_ORIGIN_ALLOW_ALL = True
     DRF_STANDARDIZED_ERRORS = {"ENABLE_IN_DEBUG_FOR_UNHANDLED_EXCEPTIONS": True}
 
-    # Media files
-    MEDIA_URL = "/media/"
-    MEDIA_ROOT = BASE_DIR / "media"
 
-    # Static files
-    STATIC_ROOT = BASE_DIR / "static"
+class Prod(Base):
+    DEBUG = True
+    ALLOWED_HOSTS = ["smartconnect.pythonanywhere.com"]
+    CORS_ORIGIN_ALLOW_ALL = True
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "momento",
+            "USER": "smartconnect",
+            "PASSWORD": "admin#5678",
+            "HOST": "smartconnect.mysql.pythonanywhere-services.com",
+            "PORT": "3306",
+        }
+    }

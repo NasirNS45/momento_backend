@@ -1,10 +1,11 @@
+from django.db.models import Q
 from django.db.models.aggregates import Count
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
-from post.models import Post, Comment, PostLike
+from post.models import Post, Comment, PostLike, CommentLike
 from post.serializers import (
     PostListSerializer,
     PostCreateSerializer,
@@ -31,13 +32,24 @@ class PostViewSet(ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
-        followers = Follow.objects.filter(follower_id=self.request.user.id).values_list(
-            "followed_id", flat=True
-        )
+        # Get all follow relationships involving the current user (accepted only)
+        relations = Follow.objects.filter(
+            Q(follower=self.request.user) | Q(followed=self.request.user),
+            status=Follow.Status.ACCEPTED
+        ).values_list("followed_id", "follower_id")
+
+        # Build a set of user IDs (you follow OR who follow you)
+        user_ids = {uid for pair in relations for uid in pair}
+
+        # Return posts of those users
         return (
             self.queryset.select_related("user")
             .prefetch_related("media", "likes", "comments")
-            .filter(user_id__in=followers).annotate(likes_count=Count("likes"), comments_count=Count("comments"))
+            .filter(user_id__in=user_ids)
+            .annotate(
+                likes_count=Count("likes", distinct=True),
+                comments_count=Count("comments", distinct=True),
+            )
         )
 
     def get_serializer_class(self):
@@ -83,7 +95,7 @@ class PostViewSet(ModelViewSet):
 
 class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
-    http_method_names = ["get"]
+    http_method_names = ["get", "post"]
 
     def get_serializer_class(self):
         action_mapping = {
@@ -103,3 +115,9 @@ class CommentViewSet(ModelViewSet):
         comment = self.get_object()
         likes = comment.comment_likes.all()
         return Response(CommentListSerializer(likes, many=True).data)
+
+    @action(detail=True, methods=["post"])
+    def like(self, request, pk=None):
+        comment = self.get_object()
+        CommentLike.objects.get_or_create(user=request.user, comment=comment)
+        return Response({"message": "Comment liked successfully"})

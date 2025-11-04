@@ -32,14 +32,18 @@ class PostViewSet(ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
-        # Get all follow relationships involving the current user (accepted only)
-        relations = Follow.objects.filter(
-            Q(follower=self.request.user) | Q(followed=self.request.user),
-            status=Follow.Status.ACCEPTED
-        ).values_list("followed_id", "follower_id")
+        me = self.request.query_params.get("me", False)
+        if me:
+            user_ids = {self.request.user.id}
+        else:
+            # Get all follow relationships involving the current user (accepted only)
+            relations = Follow.objects.filter(
+                Q(follower=self.request.user) | Q(followed=self.request.user),
+                status=Follow.Status.ACCEPTED
+            ).values_list("followed_id", "follower_id")
 
-        # Build a set of user IDs (you follow OR who follow you)
-        user_ids = {uid for pair in relations for uid in pair}
+            # Build a set of user IDs (you follow OR who follow you)
+            user_ids = {uid for pair in relations for uid in pair}
 
         # Return posts of those users
         return (

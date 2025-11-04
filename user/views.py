@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from post.models import Post
 from user.models import User, OTP, Follow
 from user.serializers import (
     RegisterSerializer,
@@ -108,6 +109,25 @@ class MeView(APIView):
     def get(self, request):
         user = request.user
         return Response(UserSerializer(user).data)
+
+
+class OverviewView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get"]
+
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        user = User.objects.filter(id=user_id).first() if user_id else request.user
+        posts_count = Post.objects.filter(user=user).count()
+        followers_count = Follow.objects.filter(followed=user).count()
+        following_count = Follow.objects.filter(follower=user).count()
+        return Response(
+            {
+                "posts": posts_count,
+                "followers": followers_count,
+                "following": following_count,
+            }
+        )
 
 
 class UserListView(generics.ListAPIView):

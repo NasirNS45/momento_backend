@@ -10,6 +10,7 @@ from user.views import (
     FollowRequestView,
     FollowRequestActionView,
     SuggestedUserListView,
+    OverviewView
 )
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("verify-otp/", VerifyOTPView.as_view(), name="verify_otp"),
     path("me/", MeView.as_view(), name="me"),
+    path("overview/", OverviewView.as_view(), name="overview"),
     path("suggested-users/", SuggestedUserListView.as_view(), name="suggested_users"),
     path("users/", UserListView.as_view(), name="users"),
     path("follow-request/", FollowRequestView.as_view(), name="follow_request"),

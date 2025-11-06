@@ -1,3 +1,5 @@
+from typing import Optional
+
 from rest_framework import serializers
 from user.models import User, Profile
 
@@ -49,7 +51,7 @@ class UserSerializer(serializers.Serializer):
     profile_picture = serializers.SerializerMethodField()
 
     @staticmethod
-    def get_profile_picture(obj):
+    def get_profile_picture(obj) -> Optional[str]:
         profile = getattr(obj, "profile", None)
         return (
             obj.profile.profile_picture.url

@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 import arrow
 from rest_framework import serializers
 
-from post.models import Post, Media, Comment, PostLike
+from post.models import Post, Media, Comment, PostLike, Hashtag
 from user.models import User
 from user.serializers import UserSerializer
 from utils.helpers import get_media_type
@@ -57,23 +57,14 @@ class PostListSerializer(serializers.ModelSerializer):
 
 
 class PostCreateSerializer(serializers.Serializer):
-    caption = serializers.CharField(
-        max_length=255, allow_blank=True, allow_null=True, required=False
-    )
-    media = serializers.ListField(
-        child=serializers.FileField(), required=False, allow_empty=True, allow_null=True
-    )
-    mentions = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
-        required=False,
-        allow_empty=True,
-        allow_null=True,
-    )
+    caption = serializers.CharField(max_length=255, allow_blank=True, allow_null=True, required=False)
+    media = serializers.ListField(child=serializers.FileField(), write_only=True)
     hashtags = serializers.ListField(
         child=serializers.CharField(max_length=100),
         required=False,
         allow_empty=True,
         allow_null=True,
+        write_only=True
     )
     type = serializers.ChoiceField(choices=Post.Type.choices, required=False)
     allow_comments = serializers.BooleanField(default=True)
@@ -82,15 +73,20 @@ class PostCreateSerializer(serializers.Serializer):
     def create(self, validated_data: Dict[str, Any]) -> Post:
         caption = validated_data.get("caption", "")
         media = validated_data.get("media", [])
+        hashtags = validated_data.get("hashtags", [])
         post_type = validated_data.get("type", Post.Type.POST)
         allow_comments = validated_data.get("allow_comments", True)
         hide_likes_views_count = validated_data.get("hide_likes_views_count", False)
+        if hashtags:
+            hashtags = [Hashtag(hashtag) for hashtag in hashtags]
+            Hashtag.objects.bulk_create(hashtags)
         post = Post.objects.create(
             user=self.context["request"].user,
             caption=caption,
             type=post_type,
             allow_comments=allow_comments,
             hide_likes_views_count=hide_likes_views_count,
+            hashtags=hashtags,
         )
         media_objs = []
         for index, file in enumerate(media):

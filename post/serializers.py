@@ -86,8 +86,8 @@ class PostCreateSerializer(serializers.Serializer):
             type=post_type,
             allow_comments=allow_comments,
             hide_likes_views_count=hide_likes_views_count,
-            hashtags=hashtags,
         )
+        post.hashtags.set(hashtags)
         media_objs = []
         for index, file in enumerate(media):
             media_type = get_media_type(file)

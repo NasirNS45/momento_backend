@@ -66,7 +66,6 @@ class PostCreateSerializer(serializers.Serializer):
     media = serializers.ListField(child=serializers.FileField(), write_only=True)
     hashtags = CSVField(
         required=False,
-        allow_empty=True,
         allow_null=True,
         write_only=True
     )

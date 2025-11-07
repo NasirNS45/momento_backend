@@ -56,11 +56,15 @@ class PostListSerializer(serializers.ModelSerializer):
         return getattr(obj, "comments_count", 0)
 
 
+class CSVField(serializers.Field):
+    def to_representation(self, value: str | list):
+        return value.split(",") if isinstance(value, str) else value
+
+
 class PostCreateSerializer(serializers.Serializer):
     caption = serializers.CharField(max_length=255, allow_blank=True, allow_null=True, required=False)
     media = serializers.ListField(child=serializers.FileField(), write_only=True)
-    hashtags = serializers.ListField(
-        child=serializers.CharField(max_length=100),
+    hashtags = CSVField(
         required=False,
         allow_empty=True,
         allow_null=True,

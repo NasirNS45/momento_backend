@@ -57,6 +57,9 @@ class PostListSerializer(serializers.ModelSerializer):
 
 
 class CSVField(serializers.Field):
+    def to_internal_value(self, data: str | list):
+        return data
+
     def to_representation(self, value: str | list):
         return value.split(",") if isinstance(value, str) else value
 

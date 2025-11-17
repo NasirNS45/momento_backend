@@ -13,9 +13,9 @@ def send_mail(email: str, subject: str, message: str):
 
 
 def get_media_type(file):
-    extension = file.name.split(".")[-1]
-    if extension in ["jpg", "jpeg", "png"]:
+    extension = file.name.split(".")[-1].lower()
+    if extension in ["jpg", "jpeg", "png", "gif", "bmp", "svg", "ico", "webp"]:
         return "image"
-    elif extension in ["mp4", "mov"]:
+    elif extension in ["avi", "mpg", "mpeg", "mpv", "ogv", "mkv", "flv", "wmv", "webm", "mp4"]:
         return "video"
     return None

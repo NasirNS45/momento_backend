@@ -84,8 +84,10 @@ class PostCreateSerializer(serializers.Serializer):
         allow_comments = validated_data.get("allow_comments", True)
         hide_likes_views_count = validated_data.get("hide_likes_views_count", False)
         if hashtags:
-            hashtags = [Hashtag(name=hashtag) for hashtag in hashtags]
-            hashtags = Hashtag.objects.bulk_create(hashtags)
+            names = [h.strip() for h in hashtags]
+            hashtags = [Hashtag(name=name) for name in names]
+            Hashtag.objects.bulk_create(hashtags, ignore_conflicts=True)
+            hashtags = Hashtag.objects.filter(name__in=names)
         post = Post.objects.create(
             user=self.context["request"].user,
             caption=caption,
